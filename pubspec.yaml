@@ -40,6 +40,9 @@ dependencies:
   liquid_pull_to_refresh: ^3.0.1
   share_plus: ^10.1.4
   rxdart: ^0.28.0
+  gallery_saver_plus: ^3.2.1
+  path_provider: ^2.1.5
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

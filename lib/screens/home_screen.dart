@@ -5,6 +5,7 @@ import '../models/menu.dart';
 import '../services/api_service.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -160,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "Rp ${menu.price}",
+                                  "Rp. ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 2).format(menu.price)}",
                                   style: TextStyle(
                                     color: Colors.green[900],
                                   ),

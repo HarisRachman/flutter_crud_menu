@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
 import '../models/menu.dart';
 import '../services/api_service.dart';
 import 'edit_data_screen.dart';
+import 'package:intl/intl.dart';
 
 class DetailScreen extends StatelessWidget {
   final Menu menu;
@@ -54,6 +59,33 @@ class DetailScreen extends StatelessWidget {
     Share.share(shareText, subject: "Bagikan Menu ${menu.name}");
   }
 
+  // Fungsi untuk mengunduh dan menyimpan gambar ke galeri
+  Future<void> _downloadImage(BuildContext context, String imageUrl) async {
+    try {
+      final response = await http.get(Uri.parse(imageUrl));
+
+      if (response.statusCode == 200) {
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/menu_image.jpg');
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Simpan ke galeri
+        await GallerySaver.saveImage(file.path);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gambar berhasil disimpan ke galeri")),
+        );
+      } else {
+        throw Exception("Gagal mengunduh gambar");
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Terjadi kesalahan saat mengunduh gambar")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String baseUrl = "https://api.megasatriahiciter.com/";
@@ -90,7 +122,7 @@ class DetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              "Rp ${menu.price}",
+              "Rp. ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 2).format(menu.price)}",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -103,7 +135,6 @@ class DetailScreen extends StatelessWidget {
               children: [
                 ElevatedButton.icon(
                   onPressed: () async {
-                    // Menavigasi ke EditDataScreen dan menunggu hasil edit
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -111,10 +142,8 @@ class DetailScreen extends StatelessWidget {
                       ),
                     );
 
-                    // Jika data diupdate, kita kembali ke halaman ini dan memperbarui data menu
                     if (result == true) {
-                      Navigator.pop(context,
-                          true); // Memberi tahu HomeScreen untuk refresh data
+                      Navigator.pop(context, true);
                     }
                   },
                   icon: const Icon(Icons.edit),
@@ -132,16 +161,30 @@ class DetailScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: _shareMenu,
-                icon: const Icon(Icons.share),
-                label: const Text("Bagikan"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _shareMenu,
+                  icon: const Icon(Icons.share),
+                  label: const Text("Bagikan"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: () =>
+                      _downloadImage(context, baseUrl + menu.image),
+                  icon: const Icon(Icons.download),
+                  label: const Text("Unduh Gambar"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
